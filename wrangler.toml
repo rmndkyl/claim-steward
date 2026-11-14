@@ -1,0 +1,17 @@
+name = "claim-steward"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+# The demo console is a text asset bundled into the worker.
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "claim_steward"
+database_id = "9d41cdb8-70ec-41a3-83e7-aaf03781fe59"
+
+[observability]
+enabled = true

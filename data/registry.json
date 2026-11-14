@@ -1,0 +1,103 @@
+{
+  "campaign_id": "lyid-season-01",
+  "name": "LYID Season 01 - Sample Distribution",
+  "description": "Synthetic campaign used by the public demo. Wallets and points are fabricated; the mechanism is real.",
+  "chain": "eip155:1",
+  "token": "VFY (sample, not transferable)",
+  "opens_at": "2026-11-10T00:00:00Z",
+  "closes_at": "2026-12-15T00:00:00Z",
+  "tiers": {
+    "SCOUT": {
+      "amount": "250",
+      "cap": "250"
+    },
+    "PROSPECTOR": {
+      "amount": "750",
+      "cap": "750"
+    },
+    "WARDEN": {
+      "amount": "2000",
+      "cap": "2000"
+    }
+  },
+  "entries": [
+    {
+      "wallet": "0x8e70b1881719ca5efbb9da0cb4347d9c62603fd5",
+      "tier": "SCOUT",
+      "points": 420
+    },
+    {
+      "wallet": "0xc303607ad038e0fc8d5b41d202f68692e5a3caad",
+      "tier": "SCOUT",
+      "points": 510
+    },
+    {
+      "wallet": "0x58efb622a95c251f5a07ceafc08d058630f80cd3",
+      "tier": "SCOUT",
+      "points": 640
+    },
+    {
+      "wallet": "0xc3be348bf5223218a57e7251fccaf151f27afcb5",
+      "tier": "PROSPECTOR",
+      "points": 1840
+    },
+    {
+      "wallet": "0xe56a6546690983f051ad3d6ba344dc2f80b7629a",
+      "tier": "PROSPECTOR",
+      "points": 2110
+    },
+    {
+      "wallet": "0xfe3733de44f240ebde597b1efce8eedf922f62fd",
+      "tier": "PROSPECTOR",
+      "points": 1675
+    },
+    {
+      "wallet": "0xe5e61d6c282a5d741f6219152f6a2dbe78f72226",
+      "tier": "WARDEN",
+      "points": 5420
+    },
+    {
+      "wallet": "0x5ca7cd01007ba064c28221186e9dc75ba720fc41",
+      "tier": "WARDEN",
+      "points": 6180
+    },
+    {
+      "wallet": "0x111334ca681e0068a7cd3702f7a624c12a49cdbb",
+      "tier": "WARDEN",
+      "points": 4905
+    }
+  ],
+  "merkle_root": "0xa638346c8de68daba191e0c24e2797bfb5f6ea8783255e652d4b02a42c95e688",
+  "leaf_count": 9,
+  "built_at": "2026-11-14T16:12:00.437Z",
+  "demo_cases": [
+    {
+      "label": "eligible / approve",
+      "wallet": "0xe56a6546690983f051ad3d6ba344dc2f80b7629a",
+      "tier": "PROSPECTOR",
+      "requested_amount": "750",
+      "expect": "APPROVE"
+    },
+    {
+      "label": "tier mismatch",
+      "wallet": "0x8e70b1881719ca5efbb9da0cb4347d9c62603fd5",
+      "tier": "WARDEN",
+      "requested_amount": "2000",
+      "expect": "REJECT / TIER_MISMATCH"
+    },
+    {
+      "label": "amount over cap",
+      "wallet": "0xe5e61d6c282a5d741f6219152f6a2dbe78f72226",
+      "tier": "WARDEN",
+      "requested_amount": "99999",
+      "expect": "REJECT / AMOUNT_OVER_CAP"
+    },
+    {
+      "label": "not in registry",
+      "wallet": "0xb5ec2bfc1371150309d9ddcc6cea7bf387394e41",
+      "tier": "SCOUT",
+      "requested_amount": "250",
+      "expect": "REJECT / NOT_ELIGIBLE"
+    }
+  ]
+}

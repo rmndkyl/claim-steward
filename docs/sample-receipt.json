@@ -1,0 +1,38 @@
+{
+  "protocol": "claim-steward/v1",
+  "receipt_id": "rcpt_30e69372312181d76cc8a193",
+  "campaign_id": "lyid-season-01",
+  "wallet": "0xe56a6546690983f051ad3d6ba344dc2f80b7629a",
+  "claim_scope": "seed-0",
+  "tier": "PROSPECTOR",
+  "requested_amount": "750",
+  "decision": "APPROVE",
+  "reason_code": "ELIGIBLE",
+  "payout": "750",
+  "registry_root": "0xa638346c8de68daba191e0c24e2797bfb5f6ea8783255e652d4b02a42c95e688",
+  "leaf": "e50061c27b8b2a71bcfb383d23b29a370c5f5500edfa76065c28d904dd335096",
+  "merkle_path": [
+    {
+      "position": "right",
+      "hash": "e50061c27b8b2a71bcfb383d23b29a370c5f5500edfa76065c28d904dd335096"
+    },
+    {
+      "position": "right",
+      "hash": "33dce3359b875a096448eb32467e6a4ba340af6ea0ef5b2ae698aef01ab634d5"
+    },
+    {
+      "position": "right",
+      "hash": "f6a11fa6cc0561bd60890353f482c2b532f878cf720b564bb95c073b74323d27"
+    },
+    {
+      "position": "left",
+      "hash": "65fc0313bba93c92701d0132aee0a18ab08019a60565c6fea59ec14bd01032c2"
+    }
+  ],
+  "agent_key_id": "cs-2026-11",
+  "issued_at": "2026-11-14T16:29:49.640Z",
+  "ledger_seq": 2,
+  "prev_hash": "0x72f7962ef122127d577c7c898e16d4a763df92ba0d74721ac9b59bb945039621",
+  "hash": "0xc379351b719ab421a9508b8554076f79e476d85ffdf2dbe7da66da6b7cc72ecb",
+  "signature": "3a32ae141d5396b72f3d6975ad2222aa099d3a2c1cd3df9732bbcc4365b104f12850662047edd54d5ad6834eae3c18e7732bfb553bd84dbaf498b8557f1bcd0e"
+}

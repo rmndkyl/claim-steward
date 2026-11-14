@@ -1,0 +1,25 @@
+{
+  "campaign_id": "lyid-season-01",
+  "name": "LYID Season 01 - Sample Distribution",
+  "description": "Synthetic campaign used by the public demo. Wallets and points are fabricated; the mechanism is real.",
+  "chain": "eip155:1",
+  "token": "VFY (sample, not transferable)",
+  "opens_at": "2026-11-10T00:00:00Z",
+  "closes_at": "2026-12-15T00:00:00Z",
+  "tiers": {
+    "SCOUT": { "amount": "250", "cap": "250" },
+    "PROSPECTOR": { "amount": "750", "cap": "750" },
+    "WARDEN": { "amount": "2000", "cap": "2000" }
+  },
+  "entries": [
+    { "label": "sample-a", "wallet": "", "tier": "SCOUT", "points": 420 },
+    { "label": "sample-b", "wallet": "", "tier": "SCOUT", "points": 510 },
+    { "label": "sample-c", "wallet": "", "tier": "SCOUT", "points": 640 },
+    { "label": "sample-d", "wallet": "", "tier": "PROSPECTOR", "points": 1840 },
+    { "label": "sample-e", "wallet": "", "tier": "PROSPECTOR", "points": 2110 },
+    { "label": "sample-f", "wallet": "", "tier": "PROSPECTOR", "points": 1675 },
+    { "label": "sample-g", "wallet": "", "tier": "WARDEN", "points": 5420 },
+    { "label": "sample-h", "wallet": "", "tier": "WARDEN", "points": 6180 },
+    { "label": "sample-i", "wallet": "", "tier": "WARDEN", "points": 4905 }
+  ]
+}

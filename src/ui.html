@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Claim Steward - verifiable airdrop claim agent</title>
+<meta name="description" content="An HTTP agent that approves or rejects airdrop claims and signs a receipt anyone can verify without trusting the operator." />
+<style>
+  :root {
+    --bg: #09090b;
+    --panel: #0c0c10;
+    --panel-2: #101016;
+    --line: #1e1e26;
+    --line-2: #2a2a34;
+    --text: #e9e9ee;
+    --muted: #8b8b96;
+    --dim: #5e5e6b;
+    --blue: #3b82f6;
+    --violet: #8b5cf6;
+    --ok: #34d399;
+    --bad: #f87171;
+    --warn: #fbbf24;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 14px 20px;
+    background: rgba(9,9,11,.86); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 13px; letter-spacing: .14em; }
+  .brand b { font-weight: 600; }
+  .brand .tag {
+    font-size: 10px; letter-spacing: .12em; color: var(--dim);
+    border: 1px solid var(--line-2); border-radius: 3px; padding: 1px 5px;
+  }
+  .status { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); }
+  .dot.on { background: var(--ok); box-shadow: 0 0 8px rgba(52,211,153,.7); }
+  .dot.off { background: var(--bad); }
+
+  .hero { padding: 56px 0 32px; border-bottom: 1px solid var(--line); }
+  .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; color: var(--violet); text-transform: uppercase; }
+  h1 { font-size: clamp(28px, 4.2vw, 46px); line-height: 1.08; letter-spacing: -.02em; margin: 14px 0 14px; font-weight: 600; }
+  h1 .thin { color: var(--dim); }
+  .hero p { margin: 0; max-width: 62ch; color: var(--muted); }
+  .hero p b { color: var(--text); font-weight: 500; }
+
+  .grid { display: grid; grid-template-columns: 320px 1fr; gap: 18px; margin-top: 28px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--muted);
+  }
+  .panel-body { padding: 14px; }
+
+  .kv { display: grid; grid-template-columns: 92px 1fr; gap: 6px 10px; font-size: 13px; }
+  .kv dt { color: var(--dim); font-family: var(--mono); font-size: 11px; letter-spacing: .06em; padding-top: 2px; }
+  .kv dd { margin: 0; font-family: var(--mono); font-size: 12px; word-break: break-all; }
+  .tier { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; padding: 5px 0; border-bottom: 1px dashed var(--line); }
+  .tier:last-child { border-bottom: 0; }
+  .tier span:last-child { color: var(--violet); }
+
+  fieldset { border: 0; padding: 0; margin: 0 0 14px; }
+  label { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--dim); margin-bottom: 5px; text-transform: uppercase; }
+  input, select {
+    width: 100%; padding: 9px 10px; border-radius: 6px;
+    background: var(--panel-2); border: 1px solid var(--line-2);
+    color: var(--text); font-family: var(--mono); font-size: 12px; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--blue); }
+  .row { display: grid; grid-template-columns: 1fr 120px 120px; gap: 10px; }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr 1fr; } .row > div:first-child { grid-column: 1 / -1; } }
+
+  button {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .06em;
+    padding: 10px 16px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--line-2); background: var(--panel-2); color: var(--text);
+    transition: border-color .15s, background .15s;
+  }
+  button:hover { border-color: var(--blue); }
+  button.primary {
+    background: linear-gradient(180deg, #2563eb, #1d4ed8);
+    border-color: #2563eb; color: #fff; font-weight: 500;
+  }
+  button.primary:hover { filter: brightness(1.08); }
+  button:disabled { opacity: .5; cursor: default; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
+  .chip {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em;
+    padding: 4px 8px; border-radius: 999px; border: 1px solid var(--line-2);
+    color: var(--muted); background: transparent; cursor: pointer;
+  }
+  .chip:hover { color: var(--text); border-color: var(--violet); }
+
+  .decision { margin-top: 18px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel-2); }
+  .decision-head { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border-bottom: 1px solid var(--line); }
+  .verdict { font-family: var(--mono); font-size: 20px; letter-spacing: .06em; font-weight: 600; line-height: 1; }
+  .verdict.approve { color: var(--ok); }
+  .verdict.reject { color: var(--bad); }
+  .verdict small { display: block; font-size: 10px; letter-spacing: .14em; color: var(--dim); margin-top: 6px; font-weight: 400; }
+  .explain { color: var(--muted); font-size: 13px; }
+  .reason { font-family: var(--mono); font-size: 11px; color: var(--warn); margin-top: 6px; }
+
+  .checks { display: grid; gap: 1px; background: var(--line); }
+  .check { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: var(--panel-2); font-family: var(--mono); font-size: 11.5px; }
+  .check .mark { width: 44px; flex: 0 0 44px; letter-spacing: .06em; }
+  .check .mark.yes { color: var(--ok); }
+  .check .mark.no { color: var(--bad); }
+  .check .name { flex: 1; color: var(--muted); }
+
+  pre {
+    margin: 0; padding: 14px; overflow: auto; max-height: 340px;
+    font-family: var(--mono); font-size: 11.5px; line-height: 1.5; color: #c9c9d4;
+    background: #08080a; border-top: 1px solid var(--line);
+  }
+  details summary {
+    cursor: pointer; padding: 10px 14px; font-family: var(--mono);
+    font-size: 11px; letter-spacing: .1em; color: var(--dim); list-style: none;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary:hover { color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11.5px; }
+  th { text-align: left; color: var(--dim); font-weight: 400; letter-spacing: .1em; font-size: 10px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  td { padding: 8px 10px; border-bottom: 1px solid #14141a; color: var(--muted); }
+  td.ok { color: var(--ok); } td.no { color: var(--bad); }
+  .mono-sm { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+  .endpoints { margin-top: 18px; }
+  .ep { display: grid; grid-template-columns: 56px 190px 1fr; gap: 12px; padding: 9px 14px; border-bottom: 1px solid #14141a; font-family: var(--mono); font-size: 11.5px; }
+  .ep:last-child { border-bottom: 0; }
+  .ep .m { color: var(--violet); }
+  .ep .p { color: var(--text); }
+  .ep .d { color: var(--dim); }
+  @media (max-width: 640px) { .ep { grid-template-columns: 46px 1fr; } .ep .d { display: none; } }
+
+  footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--dim); font-size: 12px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .note { color: var(--dim); font-size: 12px; margin-top: 10px; max-width: 70ch; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <b>CLAIM STEWARD</b>
+    <span class="tag">v1</span>
+  </div>
+  <div class="status"><span class="dot" id="dot"></span><span id="statusText">connecting</span></div>
+</header>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="kicker">zkVerify Agent Games / Wildcard</div>
+    <h1>An airdrop claim desk<br /><span class="thin">that can be checked.</span></h1>
+    <p>
+      Airdrop distributions ask people to trust a spreadsheet. This agent replaces the trust with
+      <b>three things anyone can verify</b>: an ed25519 signature on every decision, a Merkle path into a
+      commitment published <b>before</b> the first claim, and a hash-chained ledger so decisions cannot be
+      rewritten after the fact.
+    </p>
+  </section>
+
+  <div class="grid">
+
+    <aside class="panel">
+      <div class="panel-head"><span>COMMITTED CAMPAIGN</span><span id="intactTag">-</span></div>
+      <div class="panel-body">
+        <dl class="kv" id="campaignKv">
+          <dt>campaign</dt><dd id="cId">-</dd>
+          <dt>root</dt><dd id="cRoot" style="color:var(--violet)">-</dd>
+          <dt>holders</dt><dd id="cCount">-</dd>
+          <dt>window</dt><dd id="cWindow">-</dd>
+          <dt>key</dt><dd id="cKey">-</dd>
+        </dl>
+        <div style="margin-top:14px" id="tiers"></div>
+      </div>
+    </aside>
+
+    <section class="panel">
+      <div class="panel-head"><span>ASK THE AGENT</span><span class="mono-sm">POST /agent</span></div>
+      <div class="panel-body">
+
+        <div class="chips" id="chips"></div>
+
+        <div class="row">
+          <div>
+            <label for="wallet">wallet</label>
+            <input id="wallet" spellcheck="false" placeholder="0x..." value="" />
+          </div>
+          <div>
+            <label for="tier">tier claimed</label>
+            <select id="tier">
+              <option>SCOUT</option>
+              <option selected>PROSPECTOR</option>
+              <option>WARDEN</option>
+            </select>
+          </div>
+          <div>
+            <label for="amount">amount</label>
+            <input id="amount" spellcheck="false" value="750" />
+          </div>
+        </div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+          <button class="primary" id="ask">Ask the agent</button>
+          <span class="mono-sm" id="askNote"></span>
+        </div>
+
+        <div id="result"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-top:18px">
+    <div class="panel-head"><span>PUBLIC LEDGER</span><span class="mono-sm" id="ledgerNote">hash-chained decisions</span></div>
+    <div id="ledgerBody"><div class="panel-body mono-sm">loading…</div></div>
+  </section>
+
+  <section class="panel endpoints">
+    <div class="panel-head"><span>ENDPOINTS</span><span class="mono-sm">open CORS, no key required</span></div>
+    <div class="ep"><span class="m">POST</span><span class="p">/agent</span><span class="d">claim request in, decision + signed receipt out</span></div>
+    <div class="ep"><span class="m">POST</span><span class="p">/api/verify</span><span class="d">verify a receipt: signature, Merkle path, hash chain</span></div>
+    <div class="ep"><span class="m">GET</span><span class="p">/api/registry</span><span class="d">committed root, tiers, claim window</span></div>
+    <div class="ep"><span class="m">GET</span><span class="p">/api/keys</span><span class="d">agent ed25519 public key</span></div>
+    <div class="ep"><span class="m">GET</span><span class="p">/api/ledger</span><span class="d">most recent decisions with chain hashes</span></div>
+    <div class="ep"><span class="m">GET</span><span class="p">/api/protocol</span><span class="d">rule order, receipt fields, what is and is not proven</span></div>
+  </section>
+
+  <footer>
+    <span>Claim Steward - deterministic decision engine, no model in the loop.</span>
+    <span class="mono-sm" id="footNote"></span>
+  </footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const short = (h, n = 10) => (h ? h.slice(0, n) + "…" + h.slice(-6) : "-");
+
+let CAMPAIGN = null;
+let LAST_RECEIPT = null;
+
+// Each browser session gets its own settlement scope so the console stays usable
+// after the first visit. Production callers omit claim_scope and dedupe globally.
+const DEMO_SCOPE = (() => {
+  const k = "cs_demo_scope";
+  try {
+    let s = localStorage.getItem(k);
+    if (!s) {
+      s = "demo-" + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(k, s);
+    }
+    return s;
+  } catch {
+    return "demo-default";
+  }
+})();
+
+async function getJSON(url) {
+  const r = await fetch(url, { headers: { accept: "application/json" } });
+  return r.json();
+}
+
+async function boot() {
+  try {
+    const [health, reg, samples] = await Promise.all([
+      getJSON("/health"),
+      getJSON("/api/registry"),
+      getJSON("/api/samples"),
+    ]);
+    CAMPAIGN = reg;
+
+    $("dot").className = "dot " + (health.ok ? "on" : "off");
+    $("statusText").textContent = health.ok ? "agent live" : "degraded";
+    $("footNote").textContent = "key " + health.key_id + " / ledger head #" + (health.ledger_head ? health.ledger_head.seq : 0) + " / scope " + DEMO_SCOPE;
+
+    $("cId").textContent = reg.campaign_id;
+    $("cRoot").textContent = short(reg.merkle_root, 14);
+    $("cRoot").title = reg.merkle_root;
+    $("cCount").textContent = reg.leaf_count + " eligible wallets";
+    $("cWindow").textContent = reg.opens_at.slice(0, 10) + " -> " + reg.closes_at.slice(0, 10);
+    $("cKey").textContent = health.key_id;
+    $("intactTag").innerHTML = reg.registry_intact
+      ? '<span style="color:var(--ok)">ROOT OK</span>'
+      : '<span style="color:var(--bad)">TAMPERED</span>';
+
+    $("tiers").innerHTML = Object.entries(reg.tiers)
+      .map(([k, v]) => '<div class="tier"><span>' + k + '</span><span>' + v.amount + '</span></div>')
+      .join("");
+
+    $("chips").innerHTML = samples.cases
+      .map((c, i) => '<button class="chip" data-i="' + i + '">' + c.label + "</button>")
+      .join("");
+    $("chips").querySelectorAll(".chip").forEach((btn) => {
+      btn.onclick = () => {
+        const c = samples.cases[Number(btn.dataset.i)];
+        $("wallet").value = c.wallet;
+        $("tier").value = c.tier;
+        $("amount").value = c.requested_amount;
+        $("askNote").textContent = "expect " + c.expect;
+      };
+    });
+  } catch (err) {
+    $("statusText").textContent = "offline: " + err.message;
+    $("dot").className = "dot off";
+  }
+  loadLedger();
+}
+
+async function loadLedger() {
+  try {
+    const data = await getJSON("/api/ledger?limit=8");
+    if (!data.entries || data.entries.length === 0) {
+      $("ledgerBody").innerHTML = '<div class="panel-body mono-sm">No decisions yet. Ask the agent something.</div>';
+      return;
+    }
+    const rows = data.entries
+      .map(
+        (e) =>
+          "<tr><td>#" + e.seq + "</td><td class='" + (e.decision === "APPROVE" ? "ok" : "no") + "'>" +
+          e.decision + "</td><td>" + e.reason_code + "</td><td>" + short(e.wallet, 8) +
+          "</td><td>" + short(e.hash, 11) + "</td><td>" + e.created_at.slice(11, 19) + "Z</td></tr>"
+      )
+      .join("");
+    $("ledgerBody").innerHTML =
+      "<table><thead><tr><th>seq</th><th>decision</th><th>reason</th><th>wallet</th><th>hash</th><th>time</th></tr></thead><tbody>" +
+      rows + "</tbody></table>";
+  } catch (e) {
+    $("ledgerBody").innerHTML = '<div class="panel-body mono-sm">ledger unavailable: ' + e.message + "</div>";
+  }
+}
+
+function renderChecks(checks) {
+  const names = {
+    signature: "ed25519 signature valid",
+    receipt_hash: "receipt hash matches body",
+    registry_root: "root equals committed root",
+    merkle_path: "leaf is inside the committed set",
+    leaf_belongs_to_wallet: "leaf belongs to this wallet",
+  };
+  return (
+    '<div class="checks">' +
+    Object.entries(names)
+      .map(([k, label]) => {
+        const v = checks ? checks[k] : null;
+        const mark = v === true ? "yes" : v === false ? "no" : "";
+        const sym = v === true ? "PASS" : v === false ? "FAIL" : "-";
+        return '<div class="check"><span class="mark ' + mark + '">' + sym + '</span><span class="name">' +
+          label + "</span></div>";
+      })
+      .join("") +
+    "</div>"
+  );
+}
+
+async function ask() {
+  const wallet = $("wallet").value.trim();
+  const tier = $("tier").value;
+  const amount = $("amount").value.trim();
+  if (!wallet) { $("askNote").textContent = "paste a wallet first"; return; }
+
+  $("ask").disabled = true;
+  $("askNote").textContent = "asking…";
+  const body = {
+    campaign_id: CAMPAIGN ? CAMPAIGN.campaign_id : "lyid-season-01",
+    wallet,
+    tier,
+    requested_amount: amount,
+    claim_scope: DEMO_SCOPE,
+  };
+
+  try {
+    const res = await fetch("/agent", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    const receipt = data.receipt || null;
+    const approve = data.decision === "APPROVE";
+    $("result").innerHTML =
+      '<div class="decision">' +
+      '<div class="decision-head"><div class="verdict ' + (approve ? "approve" : "reject") + '">' +
+      (data.decision || "ERROR") + "<small>" + (approve ? "PAYOUT " + receipt.payout : "NO PAYOUT") + "</small></div>" +
+      '<div><div class="explain">' + (data.explanation || data.error || "") + "</div>" +
+      '<div class="reason">' + (data.reason_code || "") + " · receipt " + short(receipt ? receipt.receipt_id : "", 12) + "</div></div></div>" +
+      (receipt ? renderChecks(null) : "") +
+      (receipt ? '<details><summary>RAW RECEIPT</summary><pre>' + escapeHtml(JSON.stringify(receipt, null, 2)) + "</pre></details>" : "") +
+      "</div>";
+
+    if (receipt) {
+      $("askNote").textContent = "verifying…";
+      const v = await fetch("/api/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ receipt }),
+      }).then((r) => r.json());
+      $("result").querySelector(".checks").outerHTML = renderChecks(v.checks);
+      $("askNote").textContent = v.valid ? "receipt verified - ask again to see the duplicate guard" : "receipt NOT verified";
+    } else {
+      $("askNote").textContent = "";
+    }
+    loadLedger();
+  } catch (err) {
+    $("askNote").textContent = "request failed: " + err.message;
+  } finally {
+    $("ask").disabled = false;
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+$("ask").onclick = ask;
+$("wallet").addEventListener("keydown", (e) => { if (e.key === "Enter") ask(); });
+boot();
+</script>
+</body>
+</html>

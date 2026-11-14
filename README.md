@@ -26,7 +26,7 @@ POST https://claim-steward.lyid.workers.dev/agent
 
 Live demo console: **https://claim-steward.lyid.workers.dev**
 
-Built for the zkVerify Agent Games, Wildcard track.
+Built for the zkVerify Agent Games, Wildcard track. Submission write-up: [SUBMISSION.md](./SUBMISSION.md).
 
 ## The problem
 
